@@ -1,25 +1,42 @@
-import Button from "./components/Button"
-import ExpandableText from "./components/ExpandableText"
-import ListGroup from "./components/ListGroup"
+import { useState } from "react";
+import ExpenseList from "./expense-tracker/components/ExpenseList";
+import ExpenseFilter from "./expense-tracker/components/ExpenseFilter";
+import ExpenseForm from "./expense-tracker/components/ExpenseForm";
 
 function App() {
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-  const items: Array<string> = [
-    "New York",
-    "Los Angeles",
-    "San Francisco",
-  ]
+  const [expenses, setExpenses] = useState([
+    { id: 1, description: "aaa", amount: 10, category: "Utilities" },
+    { id: 2, description: "bb", amount: 10, category: "Utilities" },
+    { id: 3, description: "accaa", amount: 10, category: "Groceries" },
+    { id: 4, description: "ddd", amount: 10, category: "Utilities" },
+  ]);
+
+  const visibleExpenses = selectedCategory
+    ? expenses.filter((e) => e.category === selectedCategory)
+    : expenses;
 
   return (
     <div>
-      <Button onClick={() => console.log('clicked!')}>Submit</Button>
-      <ListGroup heading="Miami" items={items} onSelectItem={(item) => console.log(item)} />
-     <ExpandableText maxChars={25}>
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit dolore, iusto quo nesciunt perferendis, blanditiis consectetur unde alias voluptate laboriosam ea, vel ullam? Autem adipisci vel blanditiis debitis, consectetur sit distinctio eos reiciendis atque enim recusandae porro consequatur necessitatibus officiis architecto repudiandae laborum quas, amet itaque alias nobis exercitationem voluptatem optio fuga. Illo sit, nulla repudiandae velit quas et laborum ducimus architecto veritatis perferendis fuga nesciunt in dolorem fugit cum totam suscipit quae dignissimos iusto ipsam eveniet minus assumenda nobis? Exercitationem, architecto quaerat in expedita, nihil eaque neque sequi voluptate velit quo repellendus officiis aliquam provident rerum quidem esse assumenda.
-     </ExpandableText>
+      <div className="mb-5">
+        <ExpenseForm
+          onSubmit={(expense) => {
+            setExpenses([...expenses, { ...expense, id: expenses.length + 1 }]);
+          }}
+        />
+      </div>
+      <div className="mb-3">
+        <ExpenseFilter
+          onSelectCategory={(category) => setSelectedCategory(category)}
+        />
+      </div>
+      <ExpenseList
+        expenses={visibleExpenses}
+        onDelete={(id) => setExpenses(expenses.filter((e) => e.id != id))}
+      />
     </div>
-  )
-
+  );
 }
 
-export default App
+export default App;
