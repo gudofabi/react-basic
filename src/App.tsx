@@ -1,46 +1,19 @@
-import axios, { CanceledError } from "axios";
+import { CanceledError } from "./services/api-client";
 import { useEffect, useState } from "react";
-
-interface User {
-  id: number;
-  name: string;
-}
+import userService, { User } from "./services/user-service";
+import useUsers from "./hooks/useUsers";
 
 function App() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setIsLoading(true);
-    axios
-      .get<User[]>("https://jsonplaceholder.typicode.com/users", {
-        signal: controller.signal,
-      })
-      .then((res) => {
-        setIsLoading(false);
-        setUsers(res.data);
-      })
-      .catch((err) => {
-        if (err instanceof CanceledError) return;
-        setError(err.message);
-        setIsLoading(false);
-      });
-
-    return () => controller.abort();
-  }, []);
+  const { users, setUsers, error, setError, isLoading } = useUsers();
 
   const deleteUser = (user: User) => {
     const originalUsers = [...users];
     setUsers(users.filter((u) => u.id != user.id));
 
-    axios
-      .delete(`https://jsonplaceholder.typicode.com/susers/${user.id}`)
-      .catch((err) => {
-        setError(err.message);
-        setUsers(originalUsers);
-      });
+    userService.delete(user.id).catch((err) => {
+      setError(err.message);
+      setUsers(originalUsers);
+    });
   };
 
   const addUser = () => {
@@ -48,8 +21,8 @@ function App() {
     const newUser = { id: 0, name: "Mosh" };
     setUsers([newUser, ...users]);
 
-    axios
-      .post("https://jsonplaceholder.typicode.com/users", newUser)
+    userService
+      .create(newUser)
       .then(({ data }) => {
         setUsers([data, ...users]);
       })
@@ -64,15 +37,10 @@ function App() {
     const updateUser = { ...user, name: user.name + "!" };
     setUsers(users.map((u) => (u.id === user.id ? updateUser : u)));
 
-    axios
-      .patch(
-        `https://jsonplaceholder.typicode.com/users/${user.id}`,
-        updateUser
-      )
-      .catch((err) => {
-        setError(err.message);
-        setUsers(originalUsers);
-      });
+    userService.update(updateUser).catch((err) => {
+      setError(err.message);
+      setUsers(originalUsers);
+    });
   };
 
   return (
